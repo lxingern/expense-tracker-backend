@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS expense (
+	id INT PRIMARY KEY,
+	date DATE NOT NULL,
+	amount DECIMAL(6,2) NOT NULL,
+	category VARCHAR(50)
+);
