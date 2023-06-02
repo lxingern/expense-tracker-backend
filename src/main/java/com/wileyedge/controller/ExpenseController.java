@@ -17,7 +17,7 @@ import com.wileyedge.model.Expense;
 import com.wileyedge.service.ExpenseService;
 
 @RestController
-@RequestMapping(value = "/expenses")
+@RequestMapping("/expenses")
 public class ExpenseController {
 	
 	@Autowired

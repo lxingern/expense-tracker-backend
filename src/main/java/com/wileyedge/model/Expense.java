@@ -19,13 +19,13 @@ public class Expense {
 	@GeneratedValue
 	private int id;
 	
-	@Column(name = "date")
+	@Column
 	private LocalDate date;
 	
-	@Column(name = "amount")
+	@Column
 	private BigDecimal amount;
 	
-	@Column(name = "category")
+	@Column
 	private String category;
 
 	@Override
@@ -67,10 +67,6 @@ public class Expense {
 
 	public static List<String> getCategories() {
 		return categories;
-	}
-
-	public static void setCategories(List<String> categories) {
-		Expense.categories = categories;
 	}
 
 }
