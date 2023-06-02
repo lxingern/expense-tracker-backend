@@ -12,7 +12,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wileyedge.dao.ExpenseRepository;
 import com.wileyedge.exceptions.ExpenseNotFoundException;
 import com.wileyedge.exceptions.InvalidInputException;
+import com.wileyedge.exceptions.UserNotAuthorizedException;
 import com.wileyedge.model.Expense;
+import com.wileyedge.model.User;
 
 @Service
 public class ExpenseServiceImpl implements ExpenseService {
@@ -24,8 +26,8 @@ public class ExpenseServiceImpl implements ExpenseService {
 	ObjectMapper mapper;
 
 	@Override
-	public ObjectNode getExpensesWithTotal() {
-		List<Expense> expenses = expenseRepo.findAll();
+	public ObjectNode getExpensesWithTotal(User user) {
+		List<Expense> expenses = expenseRepo.findAllByUserId(user.getId());
 		JsonNode expensesNode = mapper.valueToTree(expenses);
 		BigDecimal total = expenses.stream()
 							.map((exp) -> exp.getAmount())
@@ -40,29 +42,35 @@ public class ExpenseServiceImpl implements ExpenseService {
 	}
 
 	@Override
-	public Expense createExpense(Expense newExpense) {
+	public Expense createExpense(Expense newExpense, User user) {
 		validateExpense(newExpense);
+		newExpense.setUser(user);
 
 		return expenseRepo.save(newExpense);
 	}
 
 	@Override
-	public Expense updateExpense(int expenseId, Expense updatedExpense) {
+	public Expense updateExpense(int expenseId, Expense updatedExpense, User user) {
 		if (updatedExpense.getId() != 0 && expenseId != updatedExpense.getId()) {
 			throw new InvalidInputException("Expense IDs in path and request body do not match.");
 		}
 		
-		checkIfExpenseExists(expenseId);
+		Expense currExpense = getExpenseIfExists(expenseId);
+		
+		checkIfUserIsAuthorized(currExpense, user);
 		
 		validateExpense(updatedExpense);
 		
-		updatedExpense.setId(expenseId);		
+		updatedExpense.setId(expenseId);
+		updatedExpense.setUser(user);
 		return expenseRepo.save(updatedExpense);
 	}
 
 	@Override
-	public void deleteExpense(int expenseId) {
-		checkIfExpenseExists(expenseId);
+	public void deleteExpense(int expenseId, User user) {
+		Expense expense = getExpenseIfExists(expenseId);
+		
+		checkIfUserIsAuthorized(expense, user);
 		
 		expenseRepo.deleteById(expenseId);
 	}
@@ -77,8 +85,14 @@ public class ExpenseServiceImpl implements ExpenseService {
 		}
 	}
 	
-	private void checkIfExpenseExists(int expenseId) {
-		boolean expenseExists = expenseRepo.existsById(expenseId);
-		if (!expenseExists) throw new ExpenseNotFoundException();
+	private Expense getExpenseIfExists(int expenseId) {
+		return expenseRepo.findById(expenseId).orElseThrow(() -> new ExpenseNotFoundException("Could not find expense with that ID."));
 	}
+	
+	private void checkIfUserIsAuthorized(Expense expense, User user) {
+		if (!expense.getUser().equals(user)) {
+			throw new UserNotAuthorizedException("You are not authorized to perform this transaction.");
+		}
+	}
+	
 }

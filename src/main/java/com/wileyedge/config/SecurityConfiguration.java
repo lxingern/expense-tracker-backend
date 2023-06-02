@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import com.wileyedge.security.utils.JwtAuthenticationFilter;
+import com.wileyedge.securityutils.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity

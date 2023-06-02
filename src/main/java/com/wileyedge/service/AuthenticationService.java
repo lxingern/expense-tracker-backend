@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 import com.wileyedge.dao.UserRepository;
 import com.wileyedge.exceptions.InvalidCredentialsException;
 import com.wileyedge.model.User;
-import com.wileyedge.security.utils.AuthenticationRequest;
-import com.wileyedge.security.utils.AuthenticationResponse;
-import com.wileyedge.security.utils.JwtService;
-import com.wileyedge.security.utils.RegisterRequest;
+import com.wileyedge.securityutils.AuthenticationRequest;
+import com.wileyedge.securityutils.AuthenticationResponse;
+import com.wileyedge.securityutils.JwtService;
+import com.wileyedge.securityutils.RegisterRequest;
 
 @Service
 public class AuthenticationService {

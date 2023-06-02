@@ -1,4 +1,4 @@
-package com.wileyedge.security.utils;
+package com.wileyedge.securityutils;
 
 import java.security.Key;
 import java.util.Date;
@@ -45,7 +45,7 @@ public class JwtService {
 	}
 	
 	public boolean isTokenValid(String token, UserDetails userDetails) {
-		final String username = extractUsername(token);
+		String username = extractUsername(token);
 		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
 	}
 	

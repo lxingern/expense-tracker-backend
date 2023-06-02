@@ -1,4 +1,4 @@
-package com.wileyedge.security.utils;
+package com.wileyedge.securityutils;
 
 import java.io.IOException;
 

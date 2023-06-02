@@ -9,6 +9,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Expense {
@@ -27,11 +29,10 @@ public class Expense {
 	
 	@Column
 	private String category;
-
-	@Override
-	public String toString() {
-		return "Expense [id=" + id + ", date=" + date + ", amount=" + amount + ", category=" + category + "]";
-	}
+	
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	private User user;
 
 	public int getId() {
 		return id;
@@ -65,8 +66,21 @@ public class Expense {
 		this.category = category;
 	}
 
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
 	public static List<String> getCategories() {
 		return categories;
 	}
 
+	@Override
+	public String toString() {
+		return "Expense [id=" + id + ", date=" + date + ", amount=" + amount + ", category=" + category + "]";
+	}
+	
 }

@@ -1,4 +1,4 @@
-package com.wileyedge.security.utils;
+package com.wileyedge.securityutils;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

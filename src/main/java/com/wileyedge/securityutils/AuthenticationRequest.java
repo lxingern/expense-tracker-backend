@@ -1,23 +1,17 @@
-package com.wileyedge.security.utils;
+package com.wileyedge.securityutils;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
 @Entity
-public class RegisterRequest {
-	
+public class AuthenticationRequest {
+
 	@Id
 	private int id;
-	private String name;
+	
 	private String email;
 	private String password;
 	
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
 	public String getEmail() {
 		return email;
 	}
