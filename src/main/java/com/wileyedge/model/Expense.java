@@ -30,6 +30,9 @@ public class Expense {
 	@Column
 	private String category;
 	
+	@Column
+	private String description;
+
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	private User user;
@@ -76,6 +79,14 @@ public class Expense {
 
 	public static List<String> getCategories() {
 		return categories;
+	}
+	
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	@Override

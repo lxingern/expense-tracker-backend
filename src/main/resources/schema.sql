@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS expense (
 	date DATE NOT NULL,
 	amount DECIMAL(6,2) NOT NULL,
 	category VARCHAR(50),
+	description VARCHAR(255),
 	FOREIGN KEY (user_id)
 		REFERENCES user(id)
 );
