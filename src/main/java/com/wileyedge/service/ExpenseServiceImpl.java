@@ -1,6 +1,7 @@
 package com.wileyedge.service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ public class ExpenseServiceImpl implements ExpenseService {
 	@Override
 	public ObjectNode getExpensesWithTotal(User user) {
 		List<Expense> expenses = expenseRepo.findAllByUserId(user.getId());
+		Collections.sort(expenses, (e1, e2) -> {
+			return e2.getDate().compareTo(e1.getDate());
+		});
 		JsonNode expensesNode = mapper.valueToTree(expenses);
 		BigDecimal total = expenses.stream()
 							.map((exp) -> exp.getAmount())
