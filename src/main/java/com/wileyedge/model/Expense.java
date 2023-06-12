@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -36,6 +37,38 @@ public class Expense {
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	private User user;
+	
+	public Expense(int id, LocalDate date, BigDecimal amount, String category, String description) {
+		this.id = id;
+		this.date = date;
+		this.amount = amount;
+		this.category = category;
+		this.description = description;
+	}
+
+	public Expense(LocalDate date, BigDecimal amount, String category, String description) {
+		this.date = date;
+		this.amount = amount;
+		this.category = category;
+		this.description = description;
+	}
+
+	public Expense(LocalDate date, BigDecimal amount, String category, String description, User user) {
+		this.date = date;
+		this.amount = amount;
+		this.category = category;
+		this.description = description;
+		this.user = user;
+	}
+
+	public Expense(int id, LocalDate date, BigDecimal amount, String category, String description, User user) {
+		this.id = id;
+		this.date = date;
+		this.amount = amount;
+		this.category = category;
+		this.description = description;
+		this.user = user;
+	}
 
 	public int getId() {
 		return id;
@@ -93,5 +126,23 @@ public class Expense {
 	public String toString() {
 		return "Expense [id=" + id + ", date=" + date + ", amount=" + amount + ", category=" + category + "]";
 	}
-	
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(amount, category, date, description, id, user);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Expense other = (Expense) obj;
+		return Objects.equals(amount, other.amount) && Objects.equals(category, other.category)
+				&& Objects.equals(date, other.date) && Objects.equals(description, other.description) && id == other.id
+				&& Objects.equals(user, other.user);
+	}
 }

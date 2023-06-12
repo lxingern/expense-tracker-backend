@@ -25,6 +25,11 @@ public class ExpenseServiceImpl implements ExpenseService {
 	
 	@Autowired
 	ObjectMapper mapper;
+	
+	public ExpenseServiceImpl(ExpenseRepository expenseRepo, ObjectMapper mapper) {
+		this.expenseRepo = expenseRepo;
+		this.mapper = mapper;
+	}
 
 	@Override
 	public ObjectNode getExpensesWithTotal(User user) {
