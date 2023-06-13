@@ -1,6 +1,7 @@
 package com.wileyedge.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -31,9 +33,9 @@ public class ExpenseController {
 	UserService userService;
 
 	@GetMapping("")
-	public ObjectNode getExpenses(Principal principal) {
+	public ObjectNode getExpenses(Principal principal, @RequestParam(required = false) String startDate, @RequestParam(required = false) String endDate, @RequestParam(required = false) List<String> categories) {
 		User user = getUserFromPrincipal(principal);
-		return expenseService.getExpensesWithTotal(user);
+		return expenseService.getExpensesWithTotal(user, startDate, endDate, categories);
 	}
 	
 	@PostMapping("")

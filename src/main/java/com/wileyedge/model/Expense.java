@@ -38,6 +38,10 @@ public class Expense {
 	@JoinColumn(name = "user_id")
 	private User user;
 	
+	
+	public Expense() {
+	}
+
 	public Expense(int id, LocalDate date, BigDecimal amount, String category, String description) {
 		this.id = id;
 		this.date = date;

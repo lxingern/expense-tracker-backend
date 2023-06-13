@@ -1,7 +1,9 @@
 package com.wileyedge.service;
 
 import java.math.BigDecimal;
-import java.util.Collections;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wileyedge.dao.ExpenseRepository;
 import com.wileyedge.exceptions.ExpenseNotFoundException;
@@ -32,20 +35,30 @@ public class ExpenseServiceImpl implements ExpenseService {
 	}
 
 	@Override
-	public ObjectNode getExpensesWithTotal(User user) {
-		List<Expense> expenses = expenseRepo.findAllByUserId(user.getId());
-		Collections.sort(expenses, (e1, e2) -> {
-			return e2.getDate().compareTo(e1.getDate());
-		});
+	public ObjectNode getExpensesWithTotal(User user, String startDate, String endDate, List<String> categories) {
+		validateDateQueryParams(startDate, endDate);
+		
+		DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		LocalDate startDateParsed = parseDate(startDate, true, format);
+		LocalDate endDateParsed = parseDate(endDate, false, format);
+		
+		if (categories == null) {
+			categories = Expense.getCategories();
+		}
+		
+		List<Expense> expenses = expenseRepo.findFilteredByUserId(user, startDateParsed, endDateParsed, categories);
 		JsonNode expensesNode = mapper.valueToTree(expenses);
 		BigDecimal total = expenses.stream()
 							.map((exp) -> exp.getAmount())
 							.reduce((a1, a2) -> a1.add(a2))
 							.orElse(new BigDecimal("0"));
-		
 		ObjectNode baseNode = mapper.createObjectNode();
 		baseNode.put("totalAmount", total);
 		baseNode.set("expenses", expensesNode);
+		baseNode.put("startDate", startDateParsed.format(format));
+		baseNode.put("endDate", endDateParsed.format(format));
+		ArrayNode categoriesNode = baseNode.putArray("categories");
+		for (String cat : categories) categoriesNode.add(cat);
 		
 		return baseNode;
 	}
@@ -82,6 +95,29 @@ public class ExpenseServiceImpl implements ExpenseService {
 		checkIfUserIsAuthorized(expense, user);
 		
 		expenseRepo.deleteById(expenseId);
+	}
+
+	private void validateDateQueryParams(String startDate, String endDate) {
+		if (startDate == null ^ endDate == null) {
+			throw new InvalidInputException("Start date and end date must either both be provided, or both not provided.");
+		}
+	}
+	
+	private LocalDate parseDate(String date, boolean isStartDate, DateTimeFormatter format) {
+		if (date == null) {
+			Calendar cal = Calendar.getInstance();
+			int currentMonth = cal.get(Calendar.MONTH) + 1;
+			int currentYear = cal.get(Calendar.YEAR);
+			
+			if (isStartDate) {
+				return LocalDate.of(currentYear, currentMonth, 1);
+			} else {
+				int lastDayOfMonth = cal.getActualMaximum(Calendar.DATE);
+				return LocalDate.of(currentYear, currentMonth, lastDayOfMonth);
+			}
+		} else {
+			return LocalDate.parse(date, format);
+		}
 	}
 	
 	private void validateExpense(Expense expense) {
