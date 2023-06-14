@@ -78,10 +78,10 @@ class ExpenseServiceImplTest {
 		Expense ex2 = new Expense(2, LocalDate.of(2023, 6, 12), new BigDecimal("4.23"), "Food and Drink", "Mixed rice", user);
 		Expense ex3 = new Expense(3, LocalDate.of(2023, 6, 12), new BigDecimal("65.70"), "Utilities and Bills", "Electricity bill", user);
 		List<Expense> expenses = new ArrayList<>(Arrays.asList(ex1, ex2, ex3));
-		ArrayList<String> categories = new ArrayList<String>(Arrays.asList("Leisure", "Food and Drink"));
+		List<String> categories = Expense.getCategories();
 		when(repo.findFilteredByUserId(user, LocalDate.of(2023, 6, 10),	LocalDate.of(2023, 6, 12), categories)).thenReturn(expenses);
 
-		ObjectNode actualResult = service.getExpensesWithTotal(user, "2023-06-10", "2023-06-12", categories);
+		ObjectNode actualResult = service.getExpensesWithTotal(user, "2023-06-10", "2023-06-12", null);
 		
 		assertEquals(new BigDecimal("87.93"), actualResult.get("totalAmount").decimalValue());
 	}
@@ -94,7 +94,7 @@ class ExpenseServiceImplTest {
 		Expense ex2 = new Expense(2, LocalDate.of(2023, 6, 12), new BigDecimal("4.23"), "Food and Drink", "Mixed rice", user);
 		Expense ex3 = new Expense(3, LocalDate.of(2023, 6, 12), new BigDecimal("65.70"), "Utilities and Bills", "Electricity bill", user);
 		List<Expense> expenses = new ArrayList<>(Arrays.asList(ex1, ex2, ex3));
-		ArrayList<String> categories = new ArrayList<String>(Arrays.asList("Leisure", "Food and Drink"));
+		List<String> categories = new ArrayList<>(Arrays.asList("Leisure", "Food and Drink"));
 		when(repo.findFilteredByUserId(user, LocalDate.of(2023, 6, 10),	LocalDate.of(2023, 6, 12), categories)).thenReturn(expenses);
 		
 		// Prepare expected output
