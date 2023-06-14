@@ -46,20 +46,10 @@ public class ExpenseServiceImpl implements ExpenseService {
 		}
 		
 		List<Expense> expenses = expenseRepo.findFilteredByUserId(user, startDateParsed, endDateParsed, categories);
-		JsonNode expensesNode = mapper.valueToTree(expenses);
-		BigDecimal total = expenses.stream()
-							.map((exp) -> exp.getAmount())
-							.reduce((a1, a2) -> a1.add(a2))
-							.orElse(new BigDecimal("0"));
-		ObjectNode baseNode = mapper.createObjectNode();
-		baseNode.put("totalAmount", total);
-		baseNode.set("expenses", expensesNode);
-		baseNode.put("startDate", startDateParsed.format(format));
-		baseNode.put("endDate", endDateParsed.format(format));
-		JsonNode categoriesNode = mapper.valueToTree(categories);
-		baseNode.set("categories", categoriesNode);
 		
-		return baseNode;
+		ObjectNode response = prepareResponse(categories, format, startDateParsed, endDateParsed, expenses);
+		
+		return response;
 	}
 
 	@Override
@@ -119,6 +109,23 @@ public class ExpenseServiceImpl implements ExpenseService {
 		}
 	}
 	
+	private ObjectNode prepareResponse(List<String> categories, DateTimeFormatter format, LocalDate startDateParsed,
+			LocalDate endDateParsed, List<Expense> expenses) {
+		JsonNode expensesNode = mapper.valueToTree(expenses);
+		BigDecimal total = expenses.stream()
+							.map((exp) -> exp.getAmount())
+							.reduce((a1, a2) -> a1.add(a2))
+							.orElse(new BigDecimal("0"));
+		ObjectNode baseNode = mapper.createObjectNode();
+		baseNode.put("totalAmount", total);
+		baseNode.set("expenses", expensesNode);
+		baseNode.put("startDate", startDateParsed.format(format));
+		baseNode.put("endDate", endDateParsed.format(format));
+		JsonNode categoriesNode = mapper.valueToTree(categories);
+		baseNode.set("categories", categoriesNode);
+		return baseNode;
+	}
+
 	private void validateExpense(Expense expense) {
 		if (expense.getAmount().compareTo(new BigDecimal("0")) == -1) {
 			throw new InvalidInputException("Amount cannot be negative.");
