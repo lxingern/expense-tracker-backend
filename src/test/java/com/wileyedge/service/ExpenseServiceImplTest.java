@@ -6,6 +6,8 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,46 +40,122 @@ class ExpenseServiceImplTest {
 	}
 
 	@Test
-	void getExpensesWithTotalReturnsCorrectSortedExpensesAndTotalForUser() {
+	void getExpensesWithTotalThrowsInvalidInputExceptionIfStartDateXOrEndDateNotProvided() {
+		User user = new User(1, "John Doe", "john@email.com", "Password123");
+		
+		assertThrows(InvalidInputException.class, () -> service.getExpensesWithTotal(user, "2023-06-10", null, null));
+		assertThrows(InvalidInputException.class, () -> service.getExpensesWithTotal(user, null, "2023-06-12", null));
+	}
+	
+	@Test
+	void getExpensesWithTotalQueriesForCurrentMonthAndAllCategoriesExpensesIfNoFiltersProvided() {
+		User user = new User(1, "John Doe", "john@email.com", "Password123");
+		Calendar cal = mock(Calendar.class);
+		when(cal.get(Calendar.MONTH)).thenReturn(5);
+		when(cal.get(Calendar.YEAR)).thenReturn(2023);
+		when(cal.getActualMaximum(Calendar.DATE)).thenReturn(30);
+		List<String> categories = Expense.getCategories();
+		
+		service.getExpensesWithTotal(user, null, null, null);
+		
+		verify(repo).findFilteredByUserId(user, LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), categories);	
+	}
+	
+	@Test
+	void getExpensesWithTotalCorrectlyQueriesExpensesWithFiltersProvided() {
+		User user = new User(1, "John Doe", "john@email.com", "Password123");
+		ArrayList<String> categories = new ArrayList<String>(Arrays.asList("Leisure", "Food and Drink"));
+		
+		service.getExpensesWithTotal(user, "2023-06-10", "2023-06-12", categories);
+		
+		verify(repo).findFilteredByUserId(user, LocalDate.of(2023, 6, 10), LocalDate.of(2023, 6, 12), categories);
+	}
+	
+	@Test
+	void getExpensesWithTotalCalculatesTotalCorrectly() {
+		User user = new User(1, "John Doe", "john@email.com", "Password123");
+		Expense ex1 = new Expense(1, LocalDate.of(2023, 6, 10), new BigDecimal("18.00"), "Leisure", "Movie ticket", user);
+		Expense ex2 = new Expense(2, LocalDate.of(2023, 6, 12), new BigDecimal("4.23"), "Food and Drink", "Mixed rice", user);
+		Expense ex3 = new Expense(3, LocalDate.of(2023, 6, 12), new BigDecimal("65.70"), "Utilities and Bills", "Electricity bill", user);
+		List<Expense> expenses = new ArrayList<>(Arrays.asList(ex1, ex2, ex3));
+		ArrayList<String> categories = new ArrayList<String>(Arrays.asList("Leisure", "Food and Drink"));
+		when(repo.findFilteredByUserId(user, LocalDate.of(2023, 6, 10),	LocalDate.of(2023, 6, 12), categories)).thenReturn(expenses);
+
+		ObjectNode actualResult = service.getExpensesWithTotal(user, "2023-06-10", "2023-06-12", categories);
+		
+		assertEquals(new BigDecimal("87.93"), actualResult.get("totalAmount").decimalValue());
+	}
+	
+	@Test
+	void getExpensesWithTotalReturnsCorrectDetailsWithFiltersProvided() {
 		// Prepare inputs
 		User user = new User(1, "John Doe", "john@email.com", "Password123");
 		Expense ex1 = new Expense(1, LocalDate.of(2023, 6, 10), new BigDecimal("18.00"), "Leisure", "Movie ticket", user);
 		Expense ex2 = new Expense(2, LocalDate.of(2023, 6, 12), new BigDecimal("4.23"), "Food and Drink", "Mixed rice", user);
-		List<Expense> expenses = new ArrayList<>();
-		expenses.add(ex1);
-		expenses.add(ex2);
+		Expense ex3 = new Expense(3, LocalDate.of(2023, 6, 12), new BigDecimal("65.70"), "Utilities and Bills", "Electricity bill", user);
+		List<Expense> expenses = new ArrayList<>(Arrays.asList(ex1, ex2, ex3));
+		ArrayList<String> categories = new ArrayList<String>(Arrays.asList("Leisure", "Food and Drink"));
+		when(repo.findFilteredByUserId(user, LocalDate.of(2023, 6, 10),	LocalDate.of(2023, 6, 12), categories)).thenReturn(expenses);
 		
 		// Prepare expected output
-		when(repo.findAllByUserId(user.getId())).thenReturn(expenses);
 		ObjectNode expectedResult = mapper.createObjectNode();
-		List<Expense> sortedExpenses = new ArrayList<>();
-		sortedExpenses.add(ex2);
-		sortedExpenses.add(ex1);
-		JsonNode expensesNode = mapper.valueToTree(sortedExpenses);
-		expectedResult.put("totalAmount", new BigDecimal("22.23"));
+		JsonNode expensesNode = mapper.valueToTree(expenses);
+		expectedResult.put("totalAmount", new BigDecimal("87.93"));
 		expectedResult.set("expenses", expensesNode);
-
-		ObjectNode actualResult = service.getExpensesWithTotal(user);
+		expectedResult.put("startDate", "2023-06-10");
+		expectedResult.put("endDate", "2023-06-12");
+		JsonNode categoriesNode = mapper.valueToTree(categories);
+		expectedResult.set("categories", categoriesNode);
+		
+		ObjectNode actualResult = service.getExpensesWithTotal(user, "2023-06-10", "2023-06-12", categories);
+		
+		assertEquals(expectedResult, actualResult);
+	}
+	
+	@Test
+	void getExpensesWithTotalReturnsCorrectDetailsWithNoFiltersProvided() {
+		// Prepare inputs
+		User user = new User(1, "John Doe", "john@email.com", "Password123");
+		Expense ex1 = new Expense(1, LocalDate.of(2023, 6, 10), new BigDecimal("18.00"), "Leisure", "Movie ticket", user);
+		Expense ex2 = new Expense(2, LocalDate.of(2023, 6, 12), new BigDecimal("4.23"), "Food and Drink", "Mixed rice", user);
+		Expense ex3 = new Expense(3, LocalDate.of(2023, 6, 12), new BigDecimal("65.70"), "Utilities and Bills", "Electricity bill", user);
+		List<Expense> expenses = new ArrayList<>(Arrays.asList(ex1, ex2, ex3));
+		Calendar cal = mock(Calendar.class);
+		when(cal.get(Calendar.MONTH)).thenReturn(5);
+		when(cal.get(Calendar.YEAR)).thenReturn(2023);
+		when(cal.getActualMaximum(Calendar.DATE)).thenReturn(30);
+		List<String> categories = Expense.getCategories();
+		when(repo.findFilteredByUserId(user, LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), categories)).thenReturn(expenses);
+		
+		// Prepare expected output
+		ObjectNode expectedResult = mapper.createObjectNode();
+		JsonNode expensesNode = mapper.valueToTree(expenses);
+		expectedResult.put("totalAmount", new BigDecimal("87.93"));
+		expectedResult.set("expenses", expensesNode);
+		expectedResult.put("startDate", "2023-06-01");
+		expectedResult.put("endDate", "2023-06-30");
+		JsonNode categoriesNode = mapper.valueToTree(categories);
+		expectedResult.set("categories", categoriesNode);
+		
+		ObjectNode actualResult = service.getExpensesWithTotal(user, null, null, null);
 		
 		assertEquals(expectedResult, actualResult);
 	}
 	
 	@Test
 	void getExpensesWithTotalReturnsEmptyExpensesListAndZeroTotalIfNoExpensesFound() {
-		// Prepare inputs
 		User user = new User(1, "John Doe", "john@email.com", "Password123");
-		
-		// Prepare expected output
-		when(repo.findAllByUserId(user.getId())).thenReturn(new ArrayList<>());
-		ObjectNode expectedResult = mapper.createObjectNode();
-		List<Expense> expenses = new ArrayList<>();
-		JsonNode expensesNode = mapper.valueToTree(expenses);
-		expectedResult.put("totalAmount", new BigDecimal("0"));
-		expectedResult.set("expenses", expensesNode);
+		Calendar cal = mock(Calendar.class);
+		when(cal.get(Calendar.MONTH)).thenReturn(5);
+		when(cal.get(Calendar.YEAR)).thenReturn(2023);
+		when(cal.getActualMaximum(Calendar.DATE)).thenReturn(30);
+		List<String> categories = Expense.getCategories();
+		when(repo.findFilteredByUserId(user, LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), categories)).thenReturn(new ArrayList<>());
 
-		ObjectNode actualResult = service.getExpensesWithTotal(user);
+		ObjectNode actualResult = service.getExpensesWithTotal(user, null, null, null);
 		
-		assertEquals(expectedResult, actualResult);
+		assertEquals(new BigDecimal("0"), actualResult.get("totalAmount").decimalValue());
+		assertTrue(actualResult.get("expenses").isEmpty());
 	}
 
 	@Test

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wileyedge.dao.ExpenseRepository;
 import com.wileyedge.exceptions.ExpenseNotFoundException;
@@ -57,8 +56,8 @@ public class ExpenseServiceImpl implements ExpenseService {
 		baseNode.set("expenses", expensesNode);
 		baseNode.put("startDate", startDateParsed.format(format));
 		baseNode.put("endDate", endDateParsed.format(format));
-		ArrayNode categoriesNode = baseNode.putArray("categories");
-		for (String cat : categories) categoriesNode.add(cat);
+		JsonNode categoriesNode = mapper.valueToTree(categories);
+		baseNode.set("categories", categoriesNode);
 		
 		return baseNode;
 	}
