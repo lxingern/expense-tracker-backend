@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -31,6 +32,8 @@ public class SecurityConfiguration {
 	private JwtAuthenticationFilter jwtAuthFilter;
 	@Autowired
 	private AuthenticationProvider authenticationProvider;
+	@Value("${FRONTEND_DNS}")
+	private String frontendDns;
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -55,7 +58,7 @@ public class SecurityConfiguration {
 		return new WebMvcConfigurer() {
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**").allowedOrigins("http://localhost:3000");
+				registry.addMapping("/**").allowedOrigins(frontendDns);
 			}
 		};
 	}

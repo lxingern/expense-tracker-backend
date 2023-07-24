@@ -48,8 +48,8 @@ class ExpenseRepositoryTest {
 	void findFilteredByUserIdCorrectlyReturnsFilteredRecords() {
 		User user = new User(1, "John Doe", "john@email.com", "Password123");
 		List<String> categoriesToFilterBy = new ArrayList<>(Arrays.asList("Leisure", "Food and Drink"));
-		Expense ex2 = new Expense(4, LocalDate.of(2023, 6, 12), new BigDecimal("4.23"), "Food and Drink", "Mixed rice", user);
-		Expense ex1 = new Expense(3, LocalDate.of(2023, 6, 10), new BigDecimal("18.00"), "Leisure", "Movie ticket", user);
+		Expense ex2 = new Expense(2, LocalDate.of(2023, 6, 12), new BigDecimal("4.23"), "Food and Drink", "Mixed rice", user);
+		Expense ex1 = new Expense(1, LocalDate.of(2023, 6, 10), new BigDecimal("18.00"), "Leisure", "Movie ticket", user);
 		List<Expense> expectedExpenses = new ArrayList<>(Arrays.asList(ex2, ex1));
 		
 		List<Expense> actualExpenses = expenseRepo.findFilteredByUserId(user, LocalDate.of(2023, 6, 10), LocalDate.of(2023, 6, 12), categoriesToFilterBy);
