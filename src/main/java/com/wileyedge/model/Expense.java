@@ -20,7 +20,7 @@ public class Expense {
 	private static List<String> categories = Arrays.asList("Food and Drink", "Utilities and Bills", "Transport", "Leisure");
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue
 	private int id;
 	
 	@Column
