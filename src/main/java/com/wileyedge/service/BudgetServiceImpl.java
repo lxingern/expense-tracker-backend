@@ -1,10 +1,12 @@
 package com.wileyedge.service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wileyedge.dao.BudgetRepository;
 import com.wileyedge.exceptions.InvalidInputException;
 import com.wileyedge.model.Budget;
@@ -16,6 +18,9 @@ public class BudgetServiceImpl implements BudgetService {
 	
 	@Autowired
 	BudgetRepository budgetRepo;
+	
+	@Autowired
+	ObjectMapper mapper;
 
 	@Override
 	public Budget createBudget(Budget newBudget, User user) {
@@ -23,6 +28,12 @@ public class BudgetServiceImpl implements BudgetService {
 		newBudget.setUser(user);
 		
 		return budgetRepo.save(newBudget);
+	}
+	
+	@Override
+	public List<Budget> getBudgets(User user) {
+		List<Budget> budgets = budgetRepo.findAll();
+		return budgets;
 	}
 
 	private void validateBudget(Budget newBudget) {

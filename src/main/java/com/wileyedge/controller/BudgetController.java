@@ -1,10 +1,12 @@
 package com.wileyedge.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +32,13 @@ public class BudgetController {
 		User user = getUserFromPrincipal(principal);
 		budgetService.createBudget(newBudget, user);
 		return new ResponseEntity<>(newBudget, HttpStatus.CREATED);
+	}
+	
+	@GetMapping("")
+	public ResponseEntity<List<Budget>> getExpenses(Principal principal) {
+		User user = getUserFromPrincipal(principal);
+		List<Budget> budgets = budgetService.getBudgets(user);
+		return new ResponseEntity<>(budgets, HttpStatus.OK);
 	}
 	
 	private User getUserFromPrincipal(Principal principal) {
