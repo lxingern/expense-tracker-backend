@@ -32,7 +32,7 @@ public class BudgetServiceImpl implements BudgetService {
 	
 	@Override
 	public List<Budget> getBudgets(User user) {
-		List<Budget> budgets = budgetRepo.findAll();
+		List<Budget> budgets = budgetRepo.findByUser(user);
 		return budgets;
 	}
 
