@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.WebRequest;
 
+import com.wileyedge.exceptions.BudgetAlreadyExistsException;
 import com.wileyedge.exceptions.ExpenseNotFoundException;
 import com.wileyedge.exceptions.InvalidInputException;
 import com.wileyedge.exceptions.UserNotAuthorizedException;
@@ -18,7 +19,7 @@ import com.wileyedge.exceptions.UserNotAuthorizedException;
 @RestController
 public class ExpenseControllerExceptionHandler {
 
-	@ExceptionHandler({InvalidInputException.class, ExpenseNotFoundException.class, UserNotAuthorizedException.class})
+	@ExceptionHandler({InvalidInputException.class, ExpenseNotFoundException.class, UserNotAuthorizedException.class, BudgetAlreadyExistsException.class})
     public final ResponseEntity<Map<String, String>> handleInvalidInputException(Exception ex, WebRequest request) {
         Map<String, String> response = new HashMap<>();
         response.put("error", ex.getLocalizedMessage());

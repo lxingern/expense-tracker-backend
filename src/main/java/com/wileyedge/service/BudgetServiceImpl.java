@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wileyedge.dao.BudgetRepository;
+import com.wileyedge.exceptions.BudgetAlreadyExistsException;
 import com.wileyedge.exceptions.InvalidInputException;
 import com.wileyedge.model.Budget;
 import com.wileyedge.model.Expense;
+import com.wileyedge.model.Timeframe;
 import com.wileyedge.model.User;
 
 @Service
@@ -24,7 +26,7 @@ public class BudgetServiceImpl implements BudgetService {
 
 	@Override
 	public Budget createBudget(Budget newBudget, User user) {
-		validateBudget(newBudget);
+		validateBudget(newBudget, user);
 		newBudget.setUser(user);
 		
 		return budgetRepo.save(newBudget);
@@ -36,7 +38,7 @@ public class BudgetServiceImpl implements BudgetService {
 		return budgets;
 	}
 
-	private void validateBudget(Budget newBudget) {
+	private void validateBudget(Budget newBudget, User user) {
 		if (!(newBudget.getType().equals("Overall") || newBudget.getType().equals("Category"))) {
 			throw new InvalidInputException("Type must be either 'Overall' or 'Category'.");
 		}
@@ -49,6 +51,19 @@ public class BudgetServiceImpl implements BudgetService {
 			throw new InvalidInputException("Amount cannot be negative.");
 		}
 		
+		List<Budget> budgets = budgetRepo.findByUser(user);
+		String newBudgetType = newBudget.getType();
+		String newBudgetCategory = newBudget.getCategory();
+		Timeframe newBudgetTimeframe = newBudget.getTimeframe();
+		boolean isDuplicateBudget;
+		if (newBudgetType.equals("Overall")) {
+			isDuplicateBudget = budgets.stream()
+									.anyMatch(budget -> budget.getType().equals("Overall") && budget.getTimeframe().equals(newBudgetTimeframe));
+		} else {
+			isDuplicateBudget = budgets.stream()
+									.anyMatch(budget -> budget.getType().equals("Category") && budget.getCategory().equals(newBudgetCategory) && budget.getTimeframe().equals(newBudgetTimeframe));
+		}
+		if (isDuplicateBudget) throw new BudgetAlreadyExistsException("That budget already exists.");
 	}
 
 }
