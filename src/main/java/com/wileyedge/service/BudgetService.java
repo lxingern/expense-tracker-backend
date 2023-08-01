@@ -10,5 +10,6 @@ public interface BudgetService {
 	public Budget createBudget(Budget newBudget, User user);
 	public List<Budget> getBudgets(User user);
 	public Budget updateBudget(int budgetId, Budget updatedBudget, User user);
+	public void deleteBudget(int budgetId, User user);
 	
 }

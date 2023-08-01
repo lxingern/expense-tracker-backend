@@ -59,6 +59,39 @@ public class BudgetServiceImpl implements BudgetService {
 		return budgetRepo.save(updatedBudget);
 	}
 
+	@Override
+	public void deleteBudget(int budgetId, User user) {
+		Budget budgetToDelete = getBudgetIfExists(budgetId);
+		
+		checkIfUserIsAuthorized(budgetToDelete, user);
+		
+		budgetRepo.deleteById(budgetId);
+	}
+
+	private void validateBudget(Budget newBudget) {
+		if (!(newBudget.getType().equals("Overall") || newBudget.getType().equals("Category"))) {
+			throw new InvalidInputException("Type must be either 'Overall' or 'Category'.");
+		}
+		
+		if (newBudget.getType().equals("Category") && !Expense.getCategories().contains(newBudget.getCategory())) {
+			throw new InvalidInputException("Category must be one of the following: 'Food and Drink', 'Utilities and Bills', 'Transport', 'Leisure'.");
+		}
+		
+		if (newBudget.getAmount().compareTo(new BigDecimal("0")) == -1) {
+			throw new InvalidInputException("Amount cannot be negative.");
+		}		
+	}
+
+	private Budget getBudgetIfExists(int budgetId) {
+		return budgetRepo.findById(budgetId).orElseThrow(() -> new BudgetNotFoundException("Could not find budget with that ID."));
+	}
+
+	private void checkIfUserIsAuthorized(Budget budget, User user) {
+		if (!budget.getUser().equals(user)) {
+			throw new UserNotAuthorizedException("You are not authorized to perform this transaction.");
+		}
+	}
+
 	private int getDuplicateBudgetId(Budget updatedBudget, User user) {
 		List<Budget> budgets = budgetRepo.findByUser(user);
 		String newBudgetType = updatedBudget.getType();
@@ -86,40 +119,16 @@ public class BudgetServiceImpl implements BudgetService {
 		}
 	}
 	
-	private void checkIfDuplicateAfterUpdate(int budgetId, Budget updatedBudget, User user) {
-		int duplicateBudgetId = getDuplicateBudgetId(updatedBudget, user);
-		
-		if (duplicateBudgetId != budgetId) throw new BudgetAlreadyExistsException("That budget already exists.");
-	}
-
-	private void checkIfUserIsAuthorized(Budget budget, User user) {
-		if (!budget.getUser().equals(user)) {
-			throw new UserNotAuthorizedException("You are not authorized to perform this transaction.");
-		}
-	}
-
-	private Budget getBudgetIfExists(int budgetId) {
-		return budgetRepo.findById(budgetId).orElseThrow(() -> new BudgetNotFoundException("Could not find budget with that ID."));
-	}
-
-	private void validateBudget(Budget newBudget) {
-		if (!(newBudget.getType().equals("Overall") || newBudget.getType().equals("Category"))) {
-			throw new InvalidInputException("Type must be either 'Overall' or 'Category'.");
-		}
-		
-		if (newBudget.getType().equals("Category") && !Expense.getCategories().contains(newBudget.getCategory())) {
-			throw new InvalidInputException("Category must be one of the following: 'Food and Drink', 'Utilities and Bills', 'Transport', 'Leisure'.");
-		}
-		
-		if (newBudget.getAmount().compareTo(new BigDecimal("0")) == -1) {
-			throw new InvalidInputException("Amount cannot be negative.");
-		}		
-	}
-
 	private void checkIfDuplicate(Budget newBudget, User user) {
 		int duplicateBudgetId = getDuplicateBudgetId(newBudget, user);
 		
 		if (duplicateBudgetId != 0) throw new BudgetAlreadyExistsException("That budget already exists.");
+	}
+
+	private void checkIfDuplicateAfterUpdate(int budgetId, Budget updatedBudget, User user) {
+		int duplicateBudgetId = getDuplicateBudgetId(updatedBudget, user);
+		
+		if (duplicateBudgetId != budgetId) throw new BudgetAlreadyExistsException("That budget already exists.");
 	}
 	
 }

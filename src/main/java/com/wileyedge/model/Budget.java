@@ -32,22 +32,6 @@ public class Budget {
 	@JoinColumn(name = "user_id")
 	private User user;
 
-//	public Budget(int id, String type, String category, BigDecimal amount, Timeframe timeframe, User user) {
-//		this.id = id;
-//		this.type = type;
-//		this.category = category;
-//		this.amount = amount;
-//		this.timeframe = timeframe;
-//		this.user = user;
-//	}
-//	
-//	public Budget(String type, String category, BigDecimal amount, Timeframe timeframe) {
-//		this.type = type;
-//		this.category = category;
-//		this.amount = amount;
-//		this.timeframe = timeframe;
-//	}
-
 	public int getId() {
 		return id;
 	}
