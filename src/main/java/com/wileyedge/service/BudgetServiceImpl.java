@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wileyedge.dao.BudgetRepository;
 import com.wileyedge.exceptions.BudgetAlreadyExistsException;
+import com.wileyedge.exceptions.BudgetNotFoundException;
 import com.wileyedge.exceptions.InvalidInputException;
+import com.wileyedge.exceptions.UserNotAuthorizedException;
 import com.wileyedge.model.Budget;
 import com.wileyedge.model.Expense;
 import com.wileyedge.model.Timeframe;
@@ -26,7 +28,8 @@ public class BudgetServiceImpl implements BudgetService {
 
 	@Override
 	public Budget createBudget(Budget newBudget, User user) {
-		validateBudget(newBudget, user);
+		validateBudget(newBudget);
+		checkIfDuplicate(newBudget, user);
 		newBudget.setUser(user);
 		
 		return budgetRepo.save(newBudget);
@@ -37,8 +40,69 @@ public class BudgetServiceImpl implements BudgetService {
 		List<Budget> budgets = budgetRepo.findByUser(user);
 		return budgets;
 	}
+	
+	@Override
+	public Budget updateBudget(int budgetId, Budget updatedBudget, User user) {
+		if (updatedBudget.getId() != 0 && budgetId != updatedBudget.getId()) {
+			throw new InvalidInputException("Expense IDs in path and request body do not match.");
+		}
+		
+		Budget currBudget = getBudgetIfExists(budgetId);
+		
+		checkIfUserIsAuthorized(currBudget, user);
+		
+		validateBudget(updatedBudget);
+		checkIfDuplicateAfterUpdate(budgetId, updatedBudget, user);
+		
+		updatedBudget.setId(budgetId);
+		updatedBudget.setUser(user);
+		return budgetRepo.save(updatedBudget);
+	}
 
-	private void validateBudget(Budget newBudget, User user) {
+	private int getDuplicateBudgetId(Budget updatedBudget, User user) {
+		List<Budget> budgets = budgetRepo.findByUser(user);
+		String newBudgetType = updatedBudget.getType();
+		String newBudgetCategory = updatedBudget.getCategory();
+		Timeframe newBudgetTimeframe = updatedBudget.getTimeframe();
+		
+		Budget duplicateBudget;
+		
+		if (newBudgetType.equals("Overall")) {
+			duplicateBudget = budgets.stream()
+					.filter(budget -> budget.getType().equals("Overall") && budget.getTimeframe().equals(newBudgetTimeframe))
+					.findFirst()
+					.orElse(null);
+		} else {
+			duplicateBudget = budgets.stream()
+					.filter(budget -> budget.getType().equals("Category") && budget.getCategory().equals(newBudgetCategory) && budget.getTimeframe().equals(newBudgetTimeframe))
+					.findFirst()
+					.orElse(null);
+		}
+		
+		if (duplicateBudget == null) {
+			return 0;
+		} else {
+			return duplicateBudget.getId();
+		}
+	}
+	
+	private void checkIfDuplicateAfterUpdate(int budgetId, Budget updatedBudget, User user) {
+		int duplicateBudgetId = getDuplicateBudgetId(updatedBudget, user);
+		
+		if (duplicateBudgetId != budgetId) throw new BudgetAlreadyExistsException("That budget already exists.");
+	}
+
+	private void checkIfUserIsAuthorized(Budget budget, User user) {
+		if (!budget.getUser().equals(user)) {
+			throw new UserNotAuthorizedException("You are not authorized to perform this transaction.");
+		}
+	}
+
+	private Budget getBudgetIfExists(int budgetId) {
+		return budgetRepo.findById(budgetId).orElseThrow(() -> new BudgetNotFoundException("Could not find budget with that ID."));
+	}
+
+	private void validateBudget(Budget newBudget) {
 		if (!(newBudget.getType().equals("Overall") || newBudget.getType().equals("Category"))) {
 			throw new InvalidInputException("Type must be either 'Overall' or 'Category'.");
 		}
@@ -49,21 +113,13 @@ public class BudgetServiceImpl implements BudgetService {
 		
 		if (newBudget.getAmount().compareTo(new BigDecimal("0")) == -1) {
 			throw new InvalidInputException("Amount cannot be negative.");
-		}
-		
-		List<Budget> budgets = budgetRepo.findByUser(user);
-		String newBudgetType = newBudget.getType();
-		String newBudgetCategory = newBudget.getCategory();
-		Timeframe newBudgetTimeframe = newBudget.getTimeframe();
-		boolean isDuplicateBudget;
-		if (newBudgetType.equals("Overall")) {
-			isDuplicateBudget = budgets.stream()
-									.anyMatch(budget -> budget.getType().equals("Overall") && budget.getTimeframe().equals(newBudgetTimeframe));
-		} else {
-			isDuplicateBudget = budgets.stream()
-									.anyMatch(budget -> budget.getType().equals("Category") && budget.getCategory().equals(newBudgetCategory) && budget.getTimeframe().equals(newBudgetTimeframe));
-		}
-		if (isDuplicateBudget) throw new BudgetAlreadyExistsException("That budget already exists.");
+		}		
 	}
 
+	private void checkIfDuplicate(Budget newBudget, User user) {
+		int duplicateBudgetId = getDuplicateBudgetId(newBudget, user);
+		
+		if (duplicateBudgetId != 0) throw new BudgetAlreadyExistsException("That budget already exists.");
+	}
+	
 }
