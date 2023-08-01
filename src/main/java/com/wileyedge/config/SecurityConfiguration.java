@@ -40,7 +40,7 @@ public class SecurityConfiguration {
 		http.csrf()
 			.disable()
 			.authorizeHttpRequests()
-			.antMatchers("/expenses/**")
+			.antMatchers("/expenses/**", "/budgets/**")
 			.authenticated()
 			.and()
 			.sessionManagement()
