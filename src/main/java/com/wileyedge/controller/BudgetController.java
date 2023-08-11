@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wileyedge.model.Budget;
+import com.wileyedge.model.BudgetInstance;
 import com.wileyedge.model.User;
 import com.wileyedge.service.BudgetService;
 import com.wileyedge.service.UserService;
@@ -31,16 +32,16 @@ public class BudgetController {
 	UserService userService;
 	
 	@PostMapping("")
-	public ResponseEntity<Budget> addExpense(Principal principal, @RequestBody Budget newBudget) {
+	public ResponseEntity<Budget> addBudget(Principal principal, @RequestBody Budget newBudget) {
 		User user = getUserFromPrincipal(principal);
 		budgetService.createBudget(newBudget, user);
 		return new ResponseEntity<>(newBudget, HttpStatus.CREATED);
 	}
 	
 	@GetMapping("")
-	public ResponseEntity<List<Budget>> getExpenses(Principal principal) {
+	public ResponseEntity<List<BudgetInstance>> getCurrentBudgetsWithUtilisation(Principal principal) {
 		User user = getUserFromPrincipal(principal);
-		List<Budget> budgets = budgetService.getBudgets(user);
+		List<BudgetInstance> budgets = budgetService.getCurrentBudgetsWithUtilisation(user);
 		return new ResponseEntity<>(budgets, HttpStatus.OK);
 	}
 	
